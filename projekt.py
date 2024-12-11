@@ -6,7 +6,6 @@ import matplotlib as mpl
 #Temperatura ciała i temperatura wody (początkowe)
 Tc = 0
 Tw = 0
-To = 0
 #masa ciała i objętość wody
 m = 0
 V = 0
@@ -22,7 +21,7 @@ Cw = 4200 #J/kgK
 def termometr(temkoncowa):
     if temkoncowa > 275.15 and temkoncowa < 375.15:
         return 0
-    elif temkoncowa > 375.15:
+    elif temkoncowa >= 375.15:
         return 1
     else:
         return 2
@@ -48,7 +47,7 @@ while True:
         break
 while True:
     try:
-        print("cieplo wlasciwe [ J/kgK]:")
+        print("cieplo wlasciwe [J/kgK]:")
         Cc = float(input())
     except ValueError:
         print("Podaj wielkość liczbową")
@@ -80,7 +79,7 @@ if Tw > Tc:
     dQ = (Tw - Tc)*(rho*V*m*Cw*Cc)/(m*Cc + rho * V * Cw)
     To = (-dQ)/(rho*V*Cw)+Tw
     dS = dQ*(Tw-Tc)/(Tc*Tw)
-    print(dQ, To, dS)
+    print(round(dQ, 2), round(To,2), round(dS,2))
 
 if Tw < Tc:
     dQ = (Tc - Tw)*(rho*V*m*Cw*Cc)/(m*Cc + rho * V * Cw)
@@ -89,8 +88,14 @@ if Tw < Tc:
     print(round(dQ, 2), round(To, 2), round(dS, 2))
 
 if termometr(To) == 1:
-    V = ((m*Cc)/(rho*Cw))*((Tc-Tw)/(375.15 - Tw) - 1)
-    print("Woda zaczyna wrzec, masz za mala objetosc basenu! Minimalna wielkosc basenu to: ", ceil(V))
+    V_2 = ((m*Cc)/(rho*Cw))*((Tc-Tw)/(375.15 - Tw) - 1)
+    if Tw < To:
+        print("Woda zaczyna wrzec, masz za mala objetosc basenu! Minimalna wielkosc basenu to: ", V)
+    elif Tw > To:
+        if V_2 > V:
+            print("Woda nie przestaje wrzeć, minimalna objętość:", V_2)
+        elif V_2 < V
+            print('Woda przestaje wrzeć....?')
 elif termometr(To) == 2:
-    V = ((m*Cc)/(rho*Cw))*((Tc-Tw)/(275.15 - Tw) - 1)
-    print("
+    V_2 = ((m*Cc)/(rho*Cw))*((Tc-Tw)/(275.15 - Tw) - 1)
+    print("Woda zaczyna krzepnac, masz za mala objetosc basenu! Minimalna wielkosc basenu to: ", V, "m^3")
