@@ -1,6 +1,10 @@
+from cProfile import label
 from math import ceil
+
+import numpy as np
 import numpy as py
-import matplotlib as mpl
+import matplotlib.pyplot as plt
+from sympy.codegen.ast import continue_
 
 #Wszystkie zmienne dane które podawane będą z klawiatury:
 #Temperatura ciała i temperatura wody (początkowe)
@@ -21,81 +25,87 @@ Cw = 4200 #J/kgK
 def termometr(temkoncowa):
     if temkoncowa > 275.15 and temkoncowa < 375.15:
         return 0
-    elif temkoncowa >= 375.15:
+    elif temkoncowa > 375.15:
         return 1
     else:
         return 2
 
-print("Podaj dane dla ciala:")
-while True:
-    try:
-        print("temperatura poczatkowa [K]:")
-        Tc = float(input())
-    except ValueError:
-        print("Podaj wielkość liczbową")
-        continue
+def CzyDobraObjetosc(To, m, Cc, Cw, Tc, Tw):
+    if termometr(To) == 1:
+        V = ((m * Cc) / (rho * Cw)) * ((Tc - Tw) / (375.15 - Tw) - 1)
+        return print("Woda zaczyna wrzec, masz za mala objetosc basenu! Minimalna wielkosc basenu to: ", ceil(V), "m^3")
+    elif termometr(To) == 2:
+        V = ((m * Cc) / (rho * Cw)) * ((Tc - Tw) / (275.15 - Tw) - 1)
+        return print("Woda zaczyna krzepnac, masz za mala objetosc basenu! Minimalna wielkosc basenu to: ", ceil(V), "m^3")
     else:
-        break
-while True:
-    try:
-        print("masa [kg]:")
-        m = float(input())
-    except ValueError:
-        print("Podaj wielkość liczbową")
-        continue
-    else:
-        break
-while True:
-    try:
-        print("cieplo wlasciwe [J/kgK]:")
-        Cc = float(input())
-    except ValueError:
-        print("Podaj wielkość liczbową")
-        continue
-    else:
-        break
+        return termometr(To)
 
+def CzyLiczbaDobraInator(Zmienna):
+    while True:
+        try:
+            Zmienna = float(Zmienna)
+        except:
+            print("Podaj liczbe:")
+            Zmienna = CzyLiczbaDobraInator(input())
+        else:
+            Zmienna = float(Zmienna)
+            break
+    while Zmienna <= 0:
+        print("Podaj poprawna wartosc:")
+        Zmienna = CzyLiczbaDobraInator(input())
+    return float(Zmienna)
+
+def CzyDobraTemperatura(Zmienna):
+    Zmienna = CzyLiczbaDobraInator(Zmienna)
+    while Zmienna < 275.15 or Zmienna > 375.15:
+        print("Woda nie ma odpowiedniej temperatury. Popraw:")
+        Zmienna = CzyLiczbaDobraInator(input())
+    return Zmienna
+
+print("Podaj dane dla ciala:")
+print("temperatura poczatkowa [K]:")
+Tc = CzyLiczbaDobraInator(input())
+print("masa [kg]:")
+m = CzyLiczbaDobraInator(input())
+print("cieplo wlasciwe [ J/kgK]:")
+Cc = CzyLiczbaDobraInator(input())
 print("Podaj dane dla basenu:")
-while True:
-    try:
-        print("temperatura poczatkowa [K]:")
-        Tw = float(input())
-    except ValueError:
-        print("Podaj wielkość liczbową")
-        continue
-    else:
-        break
-while True:
-    try:
-        print("objetosc [m^3]:")
-        V = float(input())
-    except ValueError:
-        print("Podaj wielkość liczbową")
-        continue
-    else:
-        break
+print("temperatura poczatkowa [K]:")
+Tw = CzyDobraTemperatura(input())
+print("objetosc [m^3]:")
+V = CzyLiczbaDobraInator(input())
 
 if Tw > Tc:
     dQ = (Tw - Tc)*(rho*V*m*Cw*Cc)/(m*Cc + rho * V * Cw)
     To = (-dQ)/(rho*V*Cw)+Tw
     dS = dQ*(Tw-Tc)/(Tc*Tw)
-    print(round(dQ, 2), round(To,2), round(dS,2))
+    if CzyDobraObjetosc(To, m, Cc, Cw, Tc, Tw) == 0:
+        print("dQ[J] = ", round(dQ, 2), ",", "To[K] = ", round(To, 2), ",", "dS[J/K] = ", round(dS, 2))
+        # Wykresy
+        TemCialoX = np.linspace(Tc, To, 100)
+        CieploCialoY = m * Cc * (TemCialoX - Tc)
+
+        TemWodaX = np.linspace(Tw, To, 100)
+        CieploWodaY = rho * V * Cw * (-TemWodaX + Tw)
 
 if Tw < Tc:
     dQ = (Tc - Tw)*(rho*V*m*Cw*Cc)/(m*Cc + rho * V * Cw)
     To = (dQ)/(rho*V*Cw)+Tw
     dS = dQ*(Tc-Tw)/(Tc*Tw)
-    print(round(dQ, 2), round(To, 2), round(dS, 2))
+    if CzyDobraObjetosc(To, m, Cc, Cw, Tc, Tw) == 0:
+        print("dQ[J] = ", round(dQ, 2), ",", "To[K] = ", round(To, 2), ",", "dS[J/K] = ", round(dS, 2))
+        # Wykresy
+        TemCialoX = np.linspace(Tc, To, 100)
+        CieploCialoY = m * Cc * (-TemCialoX + Tc)
 
-if termometr(To) == 1:
-    V_2 = ((m*Cc)/(rho*Cw))*((Tc-Tw)/(375.15 - Tw) - 1)
-    if Tw < To:
-        print("Woda zaczyna wrzec, masz za mala objetosc basenu! Minimalna wielkosc basenu to: ", V)
-    elif Tw > To:
-        if V_2 > V:
-            print("Woda nie przestaje wrzeć, minimalna objętość:", V_2)
-        elif V_2 < V
-            print('Woda przestaje wrzeć....?')
-elif termometr(To) == 2:
-    V_2 = ((m*Cc)/(rho*Cw))*((Tc-Tw)/(275.15 - Tw) - 1)
-    print("Woda zaczyna krzepnac, masz za mala objetosc basenu! Minimalna wielkosc basenu to: ", V, "m^3")
+        TemWodaX = np.linspace(Tw, To, 100)
+        CieploWodaY = rho * V * Cw * (TemWodaX - Tw)
+
+plt.plot(TemCialoX, CieploCialoY, color='y', lw=1, ls='--', label='Qciala(T)')
+plt.plot(TemWodaX, CieploWodaY, color='b', lw=1, ls='--', label='Qwody(T)')
+plt.legend()
+plt.xlabel('T[K]')
+plt.ylabel('dQ[J]')
+plt.title('Wykres funkcji przeplywu ciepla do temperatury Q(T):')
+plt.grid(True)
+plt.show()
